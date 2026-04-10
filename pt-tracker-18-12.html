@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PT Tracker">
+<title>PT Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f4f0;--surface:#fff;--surface2:#efefeb;--border:rgba(0,0,0,0.1);--border2:rgba(0,0,0,0.18);--text:#1a1a18;--text2:#6b6b65;--text3:#a0a09a;--green:#2d7a4f;--green-bg:#eaf5ee;--green-bd:#a8d9bc;--red:#c0392b;--red-bg:#fcecea;--red-bd:#f0b8b3;--amber:#b8620a;--amber-bg:#fdf3e3;--amber-bd:#f0c88a;--blue:#1a5fa8;--blue-bg:#e8f1fc;--blue-bd:#a8c8f0;--radius:12px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:20px}
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px 0;position:sticky;top:0;z-index:100}
+.header-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.app-title{font-size:19px;font-weight:600;letter-spacing:-.3px}
+.header-date{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace}
+.top-nav{display:flex;overflow-x:auto;scrollbar-width:none}
+.top-nav::-webkit-scrollbar{display:none}
+.tnav-btn{padding:8px 14px;font-size:13px;font-weight:500;border:none;background:none;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent;white-space:nowrap;font-family:'DM Sans',sans-serif;flex-shrink:0}
+.tnav-btn.active{color:var(--text);border-bottom-color:var(--text)}
+.view{display:none;padding:14px 14px 0}
+.view.active{display:block}
+.card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:14px;margin-bottom:10px}
+.card-title{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+.metric-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 8px;text-align:center}
+.metric-num{font-size:20px;font-weight:600;letter-spacing:-.5px;line-height:1}
+.metric-lbl{font-size:10px;color:var(--text2);margin-top:2px}
+.week-nav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.wnav-btn{width:34px;height:34px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text)}
+.wnav-btn:active{background:var(--surface2)}
+.week-label{flex:1;text-align:center;font-size:13px;font-weight:500;font-family:'DM Mono',monospace}
+.day-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:10px}
+.day-pill{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 2px 5px;text-align:center;cursor:pointer;transition:all .12s}
+.day-pill:active{transform:scale(.95)}
+.day-pill.selected{background:var(--text);border-color:var(--text)}
+.day-pill.selected .dp-name,.day-pill.selected .dp-date,.day-pill.selected .dp-count{color:#fff !important}
+.day-pill.today-pill{border-color:var(--blue)}
+.dp-name{font-size:9px;font-weight:600;color:var(--text2);letter-spacing:.04em}
+.dp-date{font-size:8px;color:var(--text3);margin:1px 0}
+.dp-count{font-size:15px;font-weight:600;line-height:1.2}
+.dp-count.zero{color:var(--text3)}
+.dp-count.low{color:var(--amber)}
+.dp-count.good{color:var(--green)}
+.client-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.clb{padding:12px 10px;border:1.5px solid var(--border2);border-radius:var(--radius);background:var(--surface);cursor:pointer;text-align:left;transition:all .1s;font-family:'DM Sans',sans-serif;width:100%}
+.clb:active{transform:scale(.97)}
+.clb.logged{background:var(--green-bg);border-color:var(--green-bd)}
+.clb.noshow{background:var(--red-bg);border-color:var(--red-bd)}
+.clb-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logged .clb-name{color:var(--green)}
+.noshow .clb-name{color:var(--red)}
+.clb-sub{font-size:10px;color:var(--text3);line-height:1.4}
+.logged .clb-sub,.noshow .clb-sub{color:inherit;opacity:.8}
+.hint-text{font-size:11px;color:var(--text3);text-align:center;margin-top:8px;line-height:1.5}
+.session-item{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px}
+.session-item:last-child{border-bottom:none}
+.si-info{flex:1}
+.si-name{font-weight:500}
+.si-loc{font-size:11px;color:var(--text2);margin-top:1px}
+.si-badge{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.si-badge.ns{background:var(--red-bg);color:var(--red)}
+.si-amount{font-size:12px;font-weight:600;color:var(--green);font-family:'DM Mono',monospace;text-align:right;white-space:nowrap}
+.billing-item{display:grid;grid-template-columns:1fr auto;gap:8px;padding:12px 0;border-bottom:1px solid var(--border)}
+.billing-item:last-child{border-bottom:none}
+.bi-name{font-size:13px;font-weight:600}
+.bi-detail{font-size:11px;color:var(--text2);margin-top:2px;line-height:1.6}
+.bi-right{text-align:right}
+.bi-total{font-size:15px;font-weight:600;font-family:'DM Mono',monospace}
+.bi-status{display:inline-block;margin-top:4px;font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px;cursor:pointer}
+.bi-status.paid{background:var(--green-bg);color:var(--green)}
+.bi-status.unpaid{background:var(--amber-bg);color:var(--amber)}
+.form-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.form-label{font-size:12px;color:var(--text2);font-weight:500;min-width:70px}
+input[type=text],input[type=number],input[type=time],select{flex:1;font-size:14px;padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-appearance:none;appearance:none}
+input:focus,select:focus{outline:2px solid var(--text);outline-offset:1px}
+.btn{padding:10px 16px;font-size:13px;font-weight:600;border:1.5px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn:active{background:var(--surface2)}
+.btn-block{width:100%;text-align:center;margin-top:8px;display:block}
+.btn-primary{background:var(--text);color:#fff;border-color:var(--text)}
+.btn-primary:active{opacity:.85}
+.btn-danger{color:var(--red);border-color:var(--red-bd)}
+.btn-sm{padding:6px 11px;font-size:11px}
+.roster-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.roster-item:last-child{border-bottom:none}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-bg);color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.ri-name{font-size:13px;font-weight:600}
+.ri-detail{font-size:11px;color:var(--text2);margin-top:1px;line-height:1.4}
+.day-toggle-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px}
+.day-toggle{padding:5px 9px;font-size:11px;font-weight:600;border:1px solid var(--border2);border-radius:20px;background:var(--surface);cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--text2)}
+.day-toggle.on{background:var(--text);border-color:var(--text);color:#fff}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--text);color:#fff;padding:9px 18px;border-radius:24px;font-size:12px;font-weight:500;opacity:0;transition:opacity .25s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1}
+.empty-state{text-align:center;color:var(--text3);font-size:13px;padding:16px 0}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:flex;align-items:flex-end}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;padding:20px 16px 40px;width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal-close{float:right;font-size:20px;cursor:pointer;color:var(--text2);line-height:1}
+.rates-box{background:var(--surface2);border-radius:var(--radius-sm);padding:10px;margin-bottom:10px}
+.rates-box-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.rates-total-row{display:flex;align-items:center;justify-content:space-between;padding-top:6px;border-top:1px solid var(--border)}
+.loc-badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;margin-left:4px}
+.loc-dhp{background:#e8f4fd;color:#1a5fa8}
+.loc-ef{background:#fdf3e3;color:#b8620a}
+.loc-ga{background:#f0edfb;color:#5b3fa8}
+.loc-ih{background:#eaf5ee;color:#2d7a4f}
+.loc-virt{background:#fcecea;color:#c0392b}
+.update-steps{font-size:13px;color:var(--text2);line-height:1.8}
+.update-step{display:flex;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)}
+.update-step:last-child{border-bottom:none}
+.step-num{font-weight:600;color:var(--text);min-width:20px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">PT Tracker</div>
+    <div class="header-date" id="header-date"></div>
+  </div>
+  <nav class="top-nav">
+    <button class="tnav-btn active" onclick="showTab('log')" id="tnav-log">Log Session</button>
+    <button class="tnav-btn" onclick="showTab('week')" id="tnav-week">This Week</button>
+    <button class="tnav-btn" onclick="showTab('billing')" id="tnav-billing">Billing</button>
+    <button class="tnav-btn" onclick="showTab('clients')" id="tnav-clients">Clients</button>
+    <button class="tnav-btn" onclick="showTab('settings')" id="tnav-settings">Settings</button>
+  </nav>
+</div>
+
+<div id="view-log" class="view active">
+  <div class="week-nav">
+    <button class="wnav-btn" onclick="changeWeek(-1)">&#8592;</button>
+    <div class="week-label" id="log-week-label"></div>
+    <button class="wnav-btn" onclick="changeWeek(1)">&#8594;</button>
+  </div>
+  <div class="day-strip" id="day-strip"></div>
+  <div class="card">
+    <div class="card-title" id="selected-day-title">Select a day</div>
+    <div class="client-grid" id="client-quick-log"></div>
+    <p class="hint-text">Tap once = logged &nbsp;·&nbsp; Tap again = no-show/cancel &nbsp;·&nbsp; Tap again = remove</p>
+  </div>
+  <div id="day-session-list"></div>
+  <div id="travel-pending-area"></div>
+  <div id="retainer-area"></div>
+  <div id="mileage-area"></div>
+</div>
+
+<div id="view-week" class="view">
+  <div class="week-nav">
+    <button class="wnav-btn" onclick="changeWeek(-1)">&#8592;</button>
+    <div class="week-label" id="week-label2"></div>
+    <button class="wnav-btn" onclick="changeWeek(1)">&#8594;</button>
+  </div>
+  <div class="metric-strip" id="week-metrics"></div>
+  <div class="card" id="week-by-location"></div>
+  <div class="card" id="week-breakdown"></div>
+</div>
+
+<div id="view-billing" class="view">
+  <div class="form-row" style="margin-bottom:10px">
+    <select id="billing-month" onchange="renderBilling()" style="flex:1"></select>
+  </div>
+  <div class="metric-strip" id="billing-metrics"></div>
+  <div style="display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid var(--border)">
+    <button class="tnav-btn active" onclick="showBillingTab('invoices')" id="btab-invoices" style="font-size:12px;padding:6px 12px">Client Invoices</button>
+    <button class="tnav-btn" onclick="showBillingTab('gymclients')" id="btab-gymclients" style="font-size:12px;padding:6px 12px">Gym Pays Me</button>
+    <button class="tnav-btn" onclick="showBillingTab('locations')" id="btab-locations" style="font-size:12px;padding:6px 12px">By Location</button>
+  </div>
+  <div id="billing-invoices"></div>
+  <div id="billing-gymclients" style="display:none"></div>
+  <div id="billing-locations" style="display:none"></div>
+  <p style="font-size:11px;color:var(--text3);text-align:center;padding:4px 8px 8px">Tap Unpaid to mark paid once Square invoice is sent</p>
+</div>
+
+<div id="view-clients" class="view">
+  <button class="btn btn-primary btn-block" style="margin-bottom:10px" onclick="openAddClient()">+ Add Client</button>
+  <div class="card">
+    <div class="card-title">Roster (<span id="client-count">0</span>)</div>
+    <div id="client-list"></div>
+  </div>
+</div>
+
+<div id="view-settings" class="view">
+  <div class="card">
+    <div class="card-title">End-of-day reminder</div>
+    <div class="form-row">
+      <label class="form-label">Time</label>
+      <input type="time" id="nudge-time" value="20:00" style="max-width:130px;flex:none">
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;color:var(--text2);font-weight:500;margin-bottom:6px">Days</div>
+      <div class="day-toggle-row" id="nudge-days"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveNudge()">Save reminder</button>
+      <button class="btn" onclick="testNudge()">Test</button>
+    </div>
+    <div id="nudge-status" style="font-size:11px;color:var(--text3);margin-top:8px;line-height:1.5"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Backup &amp; restore</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.5">Export your clients and sessions to a backup file. Import it into any new version of the app to restore your data.</p>
+    <button class="btn btn-primary btn-block" onclick="exportData()">Export backup</button>
+    <label class="btn btn-block" style="cursor:pointer;margin-top:8px">
+      Import backup
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+    </label>
+    <div id="import-status" style="font-size:12px;color:var(--text3);margin-top:8px;text-align:center"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">How to update the app</div>
+    <div class="update-steps">
+      <div class="update-step"><span class="step-num">1.</span><span>Open PT Tracker &rarr; Settings &rarr; <strong>Export backup</strong> &rarr; Save to Files &rarr; Business folder</span></div>
+      <div class="update-step"><span class="step-num">2.</span><span>Delete the PT Tracker icon from your home screen</span></div>
+      <div class="update-step"><span class="step-num">3.</span><span>Upload new pt-tracker.html to Netlify, text the link to your phone</span></div>
+      <div class="update-step"><span class="step-num">4.</span><span>Tap the link &rarr; open in Safari &rarr; Share &rarr; <strong>Add to Home Screen</strong></span></div>
+      <div class="update-step"><span class="step-num">5.</span><span>Open new icon &rarr; Settings &rarr; <strong>Import backup</strong> &rarr; find your .json file</span></div>
+      <div class="update-step"><span class="step-num" style="color:var(--green)">&#10003;</span><span>Done &mdash; your clients and sessions are restored</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Locations &amp; Distances</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Manage mileage locations and distances between them. Used for automatic mileage tracking.</p>
+    <button class="btn btn-primary btn-block" onclick="openMileLocationsModal()">Manage locations &amp; distances</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Mileage Report</div>
+    <div id="mileage-report-content"></div>
+    <button class="btn btn-primary btn-block" style="margin-top:8px" onclick="renderMileageReport()">View mileage summary</button>
+  </div>
+  <div class="card">
+    <div class="card-title">Data</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.5">Export a backup before clearing your data.</p>
+    <button class="btn btn-danger btn-block" onclick="clearAllData()">Clear all data</button>
+  </div>
+</div>
+
+<div id="modal-overlay" class="modal-overlay" style="display:none" onclick="closeModalOverlay(event)">
+  <div class="modal" id="modal-content"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var DAYS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+var LOCATIONS = {
+  DHP:  {label:'DHP',        badgeClass:'loc-dhp', gymFeeHour:0,  gymFeeHalf:0,  gymFeeTandem:0,  hasTravel:false},
+  EF:   {label:'Emery Fit',  badgeClass:'loc-ef',  gymFeeHour:20, gymFeeHalf:14, gymFeeTandem:15, hasTravel:false},
+  GA:   {label:'GA Fitness', badgeClass:'loc-ga',  gymFeeHour:0,  gymFeeHalf:0,  gymFeeTandem:0,  hasTravel:false},
+  IH:   {label:'In-Home',    badgeClass:'loc-ih',  gymFeeHour:0,  gymFeeHalf:0,  gymFeeTandem:0,  hasTravel:true},
+  VIRT: {label:'Virtual',    badgeClass:'loc-virt',gymFeeHour:0,  gymFeeHalf:0,  gymFeeTandem:0,  hasTravel:false}
+};
+
+var SESSION_TYPES = [
+  {id:'priv_hour',      label:'Private - 60 min',          std:75,    leg:60,    perPerson:false, gymPays:false},
+  {id:'priv_half',      label:'Private - 30 min',          std:45,    leg:40,    perPerson:false, gymPays:false},
+  {id:'tandem_hour',    label:'Tandem - 60 min',           std:45,    leg:40,    perPerson:true,  gymPays:false},
+  {id:'tandem_half',    label:'Tandem - 30 min',           std:45,    leg:40,    perPerson:true,  gymPays:false},
+  {id:'trio_hour',      label:'Trio - 60 min',             std:35,    leg:35,    perPerson:true,  gymPays:false},
+  {id:'virtual_hour',   label:'Virtual - 60 min',          std:75,    leg:60,    perPerson:false, gymPays:false},
+  {id:'virtual_half',   label:'Virtual - 30 min',          std:45,    leg:40,    perPerson:false, gymPays:false},
+  {id:'tandem_virtual', label:'Tandem Virtual - 60 min',   std:45,    leg:30,    perPerson:true,  gymPays:false},
+  {id:'ef_ref_half',    label:'EF Referred - 30 min',      std:25.50, leg:25.50, perPerson:false, gymPays:true},
+  {id:'ga_prosper',     label:'Prosper Perf - 60 min',     std:75,    leg:75,    perPerson:false, gymPays:true}
+];
+
+// ── Mileage data seeded into S state on first load ───────────────────────────
+var DEFAULT_MILE_LOCATIONS = [
+  {key:'HOME',  label:'Home / DHP'},
+  {key:'EF',    label:'Emery Fit'},
+  {key:'GA',    label:'GA Fitness'},
+  {key:'AMWINS',label:'AM Wins'},
+  {key:'KQ',    label:'King & Queen'},
+  {key:'Caroll',label:"Caroll's home"},
+  {key:'Geeta', label:"Geeta's home"},
+  {key:'JK',    label:"JK's home"},
+  {key:'Sajal', label:"Sajal's home"},
+  {key:'Hemi',  label:"Hemi's home"},
+  {key:'Erie',  label:"Erie's home"},
+  {key:'Sherleen',label:"Sherleen's home"},
+  {key:'Mario', label:"Mario's home"},
+  {key:'Bart',  label:"Bart's home"},
+  {key:'Milan', label:"Milan's home"},
+];
+
+var DEFAULT_MILE_DISTANCES = {
+  'AMWINS|Bart':0.4,'Bart|AMWINS':0.4,
+  'AMWINS|Caroll':20,'Caroll|AMWINS':20,
+  'AMWINS|EF':22,'EF|AMWINS':22,
+  'AMWINS|Erie':32,'Erie|AMWINS':32,
+  'AMWINS|GA':28,'GA|AMWINS':28,
+  'AMWINS|Geeta':0.4,'Geeta|AMWINS':0.4,
+  'AMWINS|Hemi':2.7,'Hemi|AMWINS':2.7,
+  'AMWINS|HOME':32,'HOME|AMWINS':32,
+  'AMWINS|JK':0.4,'JK|AMWINS':0.4,
+  'AMWINS|KQ':6.4,'KQ|AMWINS':6.4,
+  'AMWINS|Mario':21,'Mario|AMWINS':21,
+  'AMWINS|Milan':0.4,'Milan|AMWINS':0.4,
+  'AMWINS|Sajal':4.2,'Sajal|AMWINS':4.2,
+  'AMWINS|Sherleen':35,'Sherleen|AMWINS':35,
+  'Bart|Caroll':21,'Caroll|Bart':21,
+  'Bart|EF':22,'EF|Bart':22,
+  'Bart|Erie':34,'Erie|Bart':34,
+  'Bart|GA':30,'GA|Bart':30,
+  'Bart|Geeta':0,'Geeta|Bart':0,
+  'Bart|Hemi':3,'Hemi|Bart':3,
+  'Bart|HOME':34,'HOME|Bart':34,
+  'Bart|JK':0,'JK|Bart':0,
+  'Bart|KQ':7.7,'KQ|Bart':7.7,
+  'Bart|Mario':20,'Mario|Bart':20,
+  'Bart|Milan':0,'Milan|Bart':0,
+  'Bart|Sajal':4,'Sajal|Bart':4,
+  'Bart|Sherleen':35,'Sherleen|Bart':35,
+  'Caroll|EF':5.7,'EF|Caroll':5.7,
+  'Caroll|Erie':15,'Erie|Caroll':15,
+  'Caroll|GA':18,'GA|Caroll':18,
+  'Caroll|Geeta':21,'Geeta|Caroll':21,
+  'Caroll|Hemi':20,'Hemi|Caroll':20,
+  'Caroll|HOME':15,'HOME|Caroll':15,
+  'Caroll|JK':21,'JK|Caroll':21,
+  'Caroll|KQ':15,'KQ|Caroll':15,
+  'Caroll|Mario':5,'Mario|Caroll':5,
+  'Caroll|Milan':21,'Milan|Caroll':21,
+  'Caroll|Sajal':21,'Sajal|Caroll':21,
+  'Caroll|Sherleen':23,'Sherleen|Caroll':23,
+  'EF|Erie':12,'Erie|EF':12,
+  'EF|GA':15,'GA|EF':15,
+  'EF|Geeta':22,'Geeta|EF':22,
+  'EF|Hemi':21,'Hemi|EF':21,
+  'EF|HOME':12,'HOME|EF':12,
+  'EF|JK':22,'JK|EF':22,
+  'EF|KQ':17,'KQ|EF':17,
+  'EF|Mario':2.3,'Mario|EF':2.3,
+  'EF|Milan':22,'Milan|EF':22,
+  'EF|Sajal':22,'Sajal|EF':22,
+  'EF|Sherleen':18,'Sherleen|EF':18,
+  'Erie|GA':20,'GA|Erie':20,
+  'Erie|Geeta':34,'Geeta|Erie':34,
+  'Erie|Hemi':33,'Hemi|Erie':33,
+  'Erie|HOME':0,'HOME|Erie':0,
+  'Erie|JK':34,'JK|Erie':34,
+  'Erie|KQ':29,'KQ|Erie':29,
+  'Erie|Mario':13,'Mario|Erie':13,
+  'Erie|Milan':34,'Milan|Erie':34,
+  'Erie|Sajal':35,'Sajal|Erie':35,
+  'Erie|Sherleen':12,'Sherleen|Erie':12,
+  'GA|Geeta':30,'Geeta|GA':30,
+  'GA|Hemi':23,'Hemi|GA':23,
+  'GA|HOME':20,'HOME|GA':20,
+  'GA|JK':30,'JK|GA':30,
+  'GA|KQ':26,'KQ|GA':26,
+  'GA|Mario':17,'Mario|GA':17,
+  'GA|Milan':30,'Milan|GA':30,
+  'GA|Sajal':31,'Sajal|GA':31,
+  'GA|Sherleen':16,'Sherleen|GA':16,
+  'Geeta|Hemi':2.9,'Hemi|Geeta':2.9,
+  'Geeta|HOME':34,'HOME|Geeta':34,
+  'Geeta|JK':0,'JK|Geeta':0,
+  'Geeta|KQ':7.7,'KQ|Geeta':7.7,
+  'Geeta|Mario':20,'Mario|Geeta':20,
+  'Geeta|Milan':0,'Milan|Geeta':0,
+  'Geeta|Sajal':4,'Sajal|Geeta':4,
+  'Geeta|Sherleen':35,'Sherleen|Geeta':35,
+  'Hemi|HOME':33,'HOME|Hemi':33,
+  'Hemi|JK':2.9,'JK|Hemi':2.9,
+  'Hemi|KQ':4.4,'KQ|Hemi':4.4,
+  'Hemi|Mario':20,'Mario|Hemi':20,
+  'Hemi|Milan':3,'Milan|Hemi':3,
+  'Hemi|Sajal':5.7,'Sajal|Hemi':5.7,
+  'Hemi|Sherleen':34,'Sherleen|Hemi':34,
+  'HOME|JK':34,'JK|HOME':34,
+  'HOME|KQ':29,'KQ|HOME':29,
+  'HOME|Mario':13,'Mario|HOME':13,
+  'HOME|Milan':34,'Milan|HOME':34,
+  'HOME|Sajal':35,'Sajal|HOME':35,
+  'HOME|Sherleen':12,'Sherleen|HOME':12,
+  'JK|KQ':7.7,'KQ|JK':7.7,
+  'JK|Mario':20,'Mario|JK':20,
+  'JK|Milan':0,'Milan|JK':0,
+  'JK|Sajal':4,'Sajal|JK':4,
+  'JK|Sherleen':35,'Sherleen|JK':35,
+  'KQ|Mario':15,'Mario|KQ':15,
+  'KQ|Milan':7.7,'Milan|KQ':7.7,
+  'KQ|Sajal':5.5,'Sajal|KQ':5.5,
+  'KQ|Sherleen':30,'Sherleen|KQ':30,
+  'Mario|Milan':20,'Milan|Mario':20,
+  'Mario|Sajal':20,'Sajal|Mario':20,
+  'Mario|Sherleen':19,'Sherleen|Mario':19,
+  'Milan|Sajal':4,'Sajal|Milan':4,
+  'Milan|Sherleen':35,'Sherleen|Milan':35,
+  'Sajal|Sherleen':35,'Sherleen|Sajal':35
+};
+
+// Map app location keys to mileage keys
+var LOC_TO_MILE_KEY = {
+  'DHP':'HOME','EF':'EF','GA':'GA','IH':'IH','VIRT':null
+};
+
+function seedMileageData(){
+  if(!S.mileLocations||!S.mileLocations.length){
+    S.mileLocations=DEFAULT_MILE_LOCATIONS.slice();
+  }
+  if(!S.mileDistances||!Object.keys(S.mileDistances).length){
+    S.mileDistances=Object.assign({},DEFAULT_MILE_DISTANCES);
+  }
+}
+
+
+
+var S = {clients:[],sessions:{},weekOffset:0,selectedDate:null,nudge:{time:'20:00',days:[1,2,3,4,5]},billingTab:'invoices',retainerAdj:{},retainerDays:{},mileageLog:{},mileLocations:[],mileDistances:{}};
+try{var _s=localStorage.getItem('pt_v4');if(_s)S=JSON.parse(_s);}catch(e){}
+seedMileageData();
+
+function save(){try{localStorage.setItem('pt_v4',JSON.stringify(S));}catch(e){}}
+
+function toast(msg){
+  var t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(window._tt);
+  window._tt=setTimeout(function(){t.classList.remove('show');},2200);
+}
+
+function fmtMoney(n){
+  var v=Math.round(n*100)/100;
+  return '$'+v.toFixed(2).replace(/\.00$/,'');
+}
+
+function fmtTime(t){
+  if(!t)return '';
+  var parts=t.split(':');
+  var h=parseInt(parts[0]);var m=parts[1];
+  var ampm=h>=12?'pm':'am';
+  h=h%12;if(h===0)h=12;
+  return h+(m!=='00'?':'+m:'')+ampm;
+}
+
+function getWeekStart(offset){
+  var d=new Date();d.setDate(d.getDate()-d.getDay()+offset*7);d.setHours(0,0,0,0);return d;
+}
+function dateKey(d){return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function initials(n){return n.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);}
+function todayD(){var d=new Date();d.setHours(0,0,0,0);return d;}
+
+function getSessionRate(client,stId){
+  var st=SESSION_TYPES.find(function(x){return x.id===stId;});
+  if(!st)return 0;
+  return client.legacy?st.leg:st.std;
+}
+
+function getGymFee(client,stId){
+  var st=SESSION_TYPES.find(function(x){return x.id===stId;});
+  if(st&&st.gymPays)return 0;
+  var loc=LOCATIONS[client.location];
+  if(!loc)return 0;
+  if(stId==='priv_half'||stId==='virtual_half')return loc.gymFeeHalf;
+  if(stId.indexOf('tandem')>-1||stId.indexOf('trio')>-1)return loc.gymFeeTandem;
+  return loc.gymFeeHour;
+}
+
+function getLocLabel(locId){return LOCATIONS[locId]?LOCATIONS[locId].label:locId;}
+function isGymPays(stId){var st=SESSION_TYPES.find(function(x){return x.id===stId;});return st&&st.gymPays;}
+
+function sortedClients(){
+  return S.clients.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+}
+
+function showTab(t){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('active');});
+  document.querySelectorAll('.tnav-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('view-'+t).classList.add('active');
+  document.getElementById('tnav-'+t).classList.add('active');
+  if(t==='log')renderLog();
+  if(t==='week')renderWeek();
+  if(t==='billing')renderBilling();
+  if(t==='clients')renderClients();
+  if(t==='settings')renderSettings();
+}
+
+function showBillingTab(t){
+  S.billingTab=t;
+  ['invoices','gymclients','locations'].forEach(function(id){
+    document.getElementById('billing-'+id).style.display=id===t?'block':'none';
+    document.getElementById('btab-'+id).classList.toggle('active',id===t);
+  });
+}
+
+function updateHeaderDate(){
+  var d=new Date();
+  document.getElementById('header-date').textContent=MONTHS[d.getMonth()].slice(0,3)+' '+d.getDate()+', '+d.getFullYear();
+}
+updateHeaderDate();
+
+function changeWeek(d){S.weekOffset+=d;S.selectedDate=null;save();renderLog();if(document.getElementById('view-week').classList.contains('active'))renderWeek();}
+
+
+
+function getMileKey(session){
+  var c=S.clients.find(function(x){return x.id===session.clientId;});
+  // Virtual session types never require driving
+  if(session.sessionType&&session.sessionType.indexOf('virtual')>-1)return null;
+  var loc=session.location||(c?c.location:'');
+  if(loc==='IH'){
+    // Use client mileage key for in-home
+    return c&&c.mileageKey?c.mileageKey:null;
+  }
+  if(loc==='VIRT')return null;
+  return LOC_TO_MILE_KEY[loc]||loc;
+}
+
+function getDistance(fromKey,toKey){
+  if(!fromKey||!toKey)return null;
+  if(fromKey===toKey)return 0;
+  var d=(S.mileDistances||{})[fromKey+'|'+toKey];
+  return (d!==undefined)?d:null;
+}
+
+function buildDayMileage(dateKey){
+  var sessions=S.sessions[dateKey]||[];
+  var billed=sessions.filter(function(s){return !s.noShow;});
+  if(!billed.length)return [];
+  // Sort by time
+  var sorted=billed.slice().sort(function(a,b){
+    if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;
+    return a.time.localeCompare(b.time);
+  });
+  // Deduplicate by location+time (tandem partners)
+  var seen={};var unique=[];
+  sorted.forEach(function(s){
+    var mk=getMileKey(s);
+    var slotKey=(s.time||'none')+'|'+(mk||'none');
+    if(!seen[slotKey]){seen[slotKey]=true;unique.push(s);}
+  });
+  // Build trip sequence: HOME → first → ... → HOME
+  var trips=[];
+  var prev='HOME';
+  unique.forEach(function(s){
+    var mk=getMileKey(s);
+    if(!mk||mk===prev)return;
+    var dist=getDistance(prev,mk);
+    var c=S.clients.find(function(x){return x.id===s.clientId;});
+    var locLabel=mk==='HOME'?'Home/DHP':(LOCATIONS[s.location||'']?LOCATIONS[s.location||''].label:(c&&c.mileageKey?c.mileageKey:mk));
+    trips.push({from:prev,to:mk,fromLabel:prev==='HOME'?'Home/DHP':prev,toLabel:locLabel,dist:dist,session:s});
+    prev=mk;
+  });
+  // Return trip home
+  if(prev!=='HOME'){
+    var dist=getDistance(prev,'HOME');
+    trips.push({from:prev,to:'HOME',fromLabel:prev,toLabel:'Home/DHP',dist:dist,session:null});
+  }
+  return trips;
+}
+
+function renderMileageArea(){
+  var area=document.getElementById('mileage-area');
+  if(!area)return;
+  var trips=buildDayMileage(S.selectedDate);
+  if(!trips.length){area.innerHTML='';return;}
+  var saved=S.mileageLog&&S.mileageLog[S.selectedDate];
+  var totalMiles=0;
+  var rows=trips.map(function(t,i){
+    var distDisplay=t.dist!==null?t.dist+'mi':'?';
+    totalMiles+=(t.dist||0);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px">'+
+      '<span style="flex:1;color:var(--text2)">'+t.fromLabel+' <span style="color:var(--text3)">→</span> '+t.toLabel+'</span>'+
+      '<span style="font-family:\'DM Mono\',monospace;font-weight:600;color:'+(t.dist===null?'var(--red)':'var(--text)')+'">'+distDisplay+'</span>'+
+      '</div>';
+  }).join('');
+  var savedMark=saved?'<span style="color:var(--green);font-size:10px;font-weight:600"> ✓ logged</span>':'';
+  var html='<div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between">'+
+    'Mileage'+savedMark+
+    '<span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;font-size:11px">'+totalMiles.toFixed(1)+' mi total</span></div>'+
+    rows;
+  if(!saved){
+    html+='<button class="btn btn-primary btn-block" style="margin-top:8px" onclick="saveDayMileage(this.dataset.key)" data-key="'+S.selectedDate+'">Log '+totalMiles.toFixed(1)+' miles</button>';
+  } else {
+    html+='<div style="font-size:11px;color:var(--green);text-align:center;margin-top:8px">'+totalMiles.toFixed(1)+' miles logged for this day</div>';
+    html+='<button class="btn btn-sm btn-block" style="margin-top:4px" onclick="clearDayMileage(this.dataset.key)" data-key="'+S.selectedDate+'">Clear & re-log</button>';
+  }
+  // Business trip button
+  html+='<button class="btn btn-sm btn-block" style="margin-top:4px" onclick="openBusinessTripModal(this.dataset.key)" data-key="'+S.selectedDate+'">+ Add business trip</button>';
+  html+='</div>';
+  area.innerHTML=html;
+}
+
+function saveDayMileage(key){
+  var trips=buildDayMileage(key);
+  var totalMiles=trips.reduce(function(sum,t){return sum+(t.dist||0);},0);
+  if(!S.mileageLog)S.mileageLog={};
+  S.mileageLog[key]={miles:totalMiles,trips:trips.map(function(t){return {from:t.fromLabel,to:t.toLabel,dist:t.dist};})};
+  save();renderLog();toast(totalMiles.toFixed(1)+' miles logged');
+}
+
+function clearDayMileage(key){
+  if(!confirm('Clear mileage log for this day?'))return;
+  if(S.mileageLog)delete S.mileageLog[key];
+  save();renderLog();toast('Mileage cleared');
+}
+
+function openBusinessTripModal(key){
+  var locOptions='<option value="">Select location</option>';
+  (S.mileLocations||[]).forEach(function(l){locOptions+='<option value="'+l.key+'">'+l.label+'</option>';});
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">Add Business Trip</div>';
+  html+='<div class="form-row"><label class="form-label">From</label><select id="bt-from">'+locOptions+'</select></div>';
+  html+='<div class="form-row"><label class="form-label">To</label><select id="bt-to">'+locOptions+'</select></div>';
+  html+='<div class="form-row"><label class="form-label">Purpose</label><input type="text" id="bt-purpose" placeholder="e.g. equipment purchase" autocomplete="off"></div>';
+  html+='<div id="bt-dist" style="font-size:12px;color:var(--text2);margin-bottom:10px;text-align:center"></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="saveBusinessTrip(this.dataset.key)" data-key="'+key+'">Log trip</button>';
+  html+='<button class="btn btn-block" onclick="closeModal()">Cancel</button>';
+  showModal(html);
+  document.getElementById('bt-from').onchange=updateBtDist;
+  document.getElementById('bt-to').onchange=updateBtDist;
+}
+
+function updateBtDist(){
+  var from=document.getElementById('bt-from').value;
+  var to=document.getElementById('bt-to').value;
+  var el=document.getElementById('bt-dist');
+  if(!from||!to){el.textContent='';return;}
+  var d=getDistance(from,to);
+  el.textContent=d!==null?d+' miles':'Distance not found — will be logged as 0';
+}
+
+function saveBusinessTrip(key){
+  var from=document.getElementById('bt-from').value;
+  var to=document.getElementById('bt-to').value;
+  var purpose=(document.getElementById('bt-purpose').value||'').trim();
+  if(!from||!to){toast('Select from and to');return;}
+  var dist=getDistance(from,to)||0;
+  if(!S.mileageLog)S.mileageLog={};
+  if(!S.mileageLog[key])S.mileageLog[key]={miles:0,trips:[]};
+  var allLocs={};
+  (S.mileLocations||[]).forEach(function(l){allLocs[l.key]=l.label;});
+  S.mileageLog[key].trips.push({from:allLocs[from]||from,to:allLocs[to]||to,dist:dist,purpose:purpose,business:true});
+  S.mileageLog[key].miles+=dist;
+  save();closeModal();renderLog();toast(dist+' miles logged');
+}
+
+// ── Mileage report ────────────────────────────────────────────────────────────
+function getMileageSummary(){
+  if(!S.mileageLog)return{total:0,byMonth:{}};
+  var total=0;var byMonth={};
+  Object.keys(S.mileageLog).forEach(function(key){
+    var entry=S.mileageLog[key];
+    var miles=entry.miles||0;
+    total+=miles;
+    var parts=key.split('-');
+    var mo=parts[0]+'-'+parts[1];
+    if(!byMonth[mo])byMonth[mo]=0;
+    byMonth[mo]+=miles;
+  });
+  return{total:total,byMonth:byMonth};
+}
+
+// ── Cancel modal ──────────────────────────────────────────────────────────────
+function openCancelModal(key,idx){
+  var s=S.sessions[key][idx];
+  var c=S.clients.find(function(x){return x.id===s.clientId;});
+  if(!c)return;
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">No-show / Cancel &mdash; '+c.name.split(' ')[0]+'</div>';
+  html+='<p style="font-size:13px;color:var(--text2);margin-bottom:14px;line-height:1.5">Did you charge a cancellation fee?</p>';
+  html+='<div class="form-row"><label class="form-label">Charge</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="cc-amt" value="'+(s.cancelCharge||'')+'" placeholder="0.00" min="0" step="0.50" style="flex:1"></div></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="saveCancelCharge(this.dataset.key,'+idx+')" data-key="'+key+'">Save</button>';
+  html+='<button class="btn btn-block" onclick="closeModal()">No charge</button>';
+  showModal(html);
+}
+
+function saveCancelCharge(key,idx){
+  var el=document.getElementById('cc-amt');
+  var amt=el?parseFloat(el.value)||0:0;
+  if(S.sessions[key]&&S.sessions[key][idx])S.sessions[key][idx].cancelCharge=amt;
+  save();closeModal();renderLog();toast('No-show/Cancel saved');
+}
+
+// ── Retainer functions ────────────────────────────────────────────────────────
+function toggleRetainerFields(){
+  var cb=document.getElementById('cf-retainer');
+  var fields=document.getElementById('cf-retainer-fields');
+  if(fields)fields.style.display=cb&&cb.checked?'block':'none';
+}
+
+function toggleRetainerDay(key,on){
+  if(!S.retainerDays)S.retainerDays={};
+  S.retainerDays[key]=on;
+  if(!on&&S.retainerAdj)delete S.retainerAdj[key];
+  save();renderLog();toast(on?'Retainer block added':'Retainer block removed');
+}
+
+function renderRetainerArea(){
+  var area=document.getElementById('retainer-area');
+  if(!area)return;
+  var retainerClient=S.clients.find(function(c){return c.retainer;});
+  if(!retainerClient){area.innerHTML='';return;}
+  if(!S.retainerDays)S.retainerDays={};
+  var parts=S.selectedDate.split('-');
+  var selD=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  var isDefaultDay=[1,3,5].indexOf(selD.getDay())>-1;
+  var toggleVal=S.retainerDays[S.selectedDate];
+  var retainerOn=(toggleVal===undefined)?isDefaultDay:toggleVal;
+  if(!retainerOn){
+    area.innerHTML='<div style="text-align:center;padding:8px 0"><button class="btn btn-sm" onclick="toggleRetainerDay(this.dataset.key,true)" data-key="'+S.selectedDate+'">+ Add retainer block</button></div>';
+    return;
+  }
+  var sessions=S.sessions[S.selectedDate]||[];
+  var partnerId=retainerClient.retainerPartnerId;
+  var retainerMin=retainerClient.retainerAmt||150;
+  var hasSession=sessions.some(function(s){return s.clientId===retainerClient.id||s.clientId===partnerId;});
+  if(!hasSession){
+    area.innerHTML='<div style="text-align:center;padding:8px 0"><button class="btn btn-sm btn-danger" onclick="toggleRetainerDay(this.dataset.key,false)" data-key="'+S.selectedDate+'">Remove retainer block</button></div>';
+    return;
+  }
+  var trainingTotal=0;
+  sessions.forEach(function(s){
+    if(s.noShow&&!(s.cancelCharge>0))return;
+    if(s.clientId!==retainerClient.id&&s.clientId!==partnerId)return;
+    var c=S.clients.find(function(x){return x.id===s.clientId;});
+    if(!c)return;
+    if(s.noShow){trainingTotal+=(s.cancelCharge||0);return;}
+    var base=s.rateOverride?s.rateOverride.base:getSessionRate(c,s.sessionType);
+    trainingTotal+=base;
+  });
+  var gap=Math.max(0,retainerMin-trainingTotal);
+  if(!S.retainerAdj)S.retainerAdj={};
+  var savedAdj=S.retainerAdj[S.selectedDate];
+  var displayAmt=(savedAdj!==undefined)?savedAdj:gap;
+  var html='<div class="card"><div class="card-title" style="display:flex;align-items:center;justify-content:space-between">Retainer adjustment <span style="font-weight:400;color:var(--text3);text-transform:none;letter-spacing:0;font-size:11px">(min $'+retainerMin+')</span><button class="btn btn-sm btn-danger" style="font-size:10px;padding:3px 8px" onclick="toggleRetainerDay(this.dataset.key,false)" data-key="'+S.selectedDate+'">Remove</button></div>';
+  html+='<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Training fees logged: '+fmtMoney(trainingTotal)+' &nbsp;·&nbsp; Gap: '+fmtMoney(gap)+'</div>';
+  html+='<div class="form-row"><label class="form-label">Top-up</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="retainer-adj-amt" value="'+displayAmt+'" min="0" step="0.50" style="flex:1"></div></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="saveRetainerAdj(this.dataset.key)" data-key="'+S.selectedDate+'">Save adjustment</button>';
+  html+='</div>';
+  area.innerHTML=html;
+}
+
+function saveRetainerAdj(key){
+  var el=document.getElementById('retainer-adj-amt');
+  var amt=el?parseFloat(el.value)||0:0;
+  if(!S.retainerAdj)S.retainerAdj={};
+  S.retainerAdj[key]=amt;
+  save();renderLog();toast('Retainer adjustment saved');
+}
+
+function renderLog(){
+  var ws=getWeekStart(S.weekOffset);
+  var we=new Date(ws);we.setDate(we.getDate()+6);
+  var fmt=function(d){return (d.getMonth()+1)+'/'+d.getDate();};
+  document.getElementById('log-week-label').textContent=fmt(ws)+' \u2013 '+fmt(we);
+  var td=todayD();
+  if(!S.selectedDate){S.selectedDate=(td>=ws&&td<=we)?dateKey(td):dateKey(ws);}
+
+  var strip=document.getElementById('day-strip');
+  strip.innerHTML='';
+  for(var i=0;i<7;i++){
+    var d=new Date(ws);d.setDate(d.getDate()+i);
+    var key=dateKey(d);
+    var count=(S.sessions[key]||[]).filter(function(s){return !s.noShow;}).length;
+    var isToday=d.getTime()===td.getTime();
+    var isSel=key===S.selectedDate;
+    var cc=count===0?'zero':count<3?'low':'good';
+    var pill=document.createElement('button');
+    pill.className='day-pill'+(isToday?' today-pill':'')+(isSel?' selected':'');
+    pill.innerHTML='<div class="dp-name">'+DAYS[d.getDay()].slice(0,2)+'</div><div class="dp-date">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="dp-count '+(isSel?'':cc)+'">'+count+'</div>';
+    (function(k){pill.onclick=function(){S.selectedDate=k;save();renderLog();};})(key);
+    strip.appendChild(pill);
+  }
+
+  var parts=S.selectedDate.split('-');
+  var selDate=new Date(parseInt(parts[0]),parseInt(parts[1])-1,parseInt(parts[2]));
+  document.getElementById('selected-day-title').textContent=DAYS[selDate.getDay()]+', '+MONTHS[selDate.getMonth()]+' '+selDate.getDate();
+
+  var sessions=S.sessions[S.selectedDate]||[];
+  var cGrid=document.getElementById('client-quick-log');
+  if(!S.clients.length){
+    cGrid.innerHTML='<p style="font-size:13px;color:var(--text3);grid-column:span 2;text-align:center;padding:12px 0">Add clients in the Clients tab first.</p>';
+  } else {
+    cGrid.innerHTML='';
+    sortedClients().forEach(function(c){
+      var ex=sessions.find(function(s){return s.clientId===c.id;});
+      var cls='',status='Tap to log';
+      if(ex&&!ex.noShow){cls='logged';status='Logged \u2713';}
+      else if(ex&&ex.noShow){cls='noshow';status='No-show';}
+      var loc=LOCATIONS[c.location];
+      var st=SESSION_TYPES.find(function(x){return x.id===c.defaultSessionType;});
+      var btn=document.createElement('button');
+      btn.className='clb '+cls;
+      var firstName=c.name.split(' ')[0];
+      var lastInit=c.name.split(' ')[1]?c.name.split(' ')[1][0]+'.':'';
+      var locLabel=loc?loc.label:c.location;
+      var stLabel=st?st.label.replace(' min','').replace('Private - ','').replace('Virtual - ',''):c.defaultSessionType;
+      btn.innerHTML='<div class="clb-name">'+firstName+' '+lastInit+'</div><div class="clb-sub">'+locLabel+' \u00b7 '+stLabel+'</div><div class="clb-sub">'+status+'</div>';
+      (function(cid){btn.onclick=function(){handleClientTap(S.selectedDate,cid);};})(c.id);
+      cGrid.appendChild(btn);
+    });
+  }
+  renderDaySessionList();
+  renderTravelPending();
+  renderRetainerArea();
+  renderMileageArea();
+}
+
+function renderDaySessionList(){
+  var sessions=S.sessions[S.selectedDate]||[];
+  var listEl=document.getElementById('day-session-list');
+  if(!sessions.length){listEl.innerHTML='';return;}
+  var dayTotal=0;
+  var sorted=sessions.slice().sort(function(a,b){
+    if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;
+    return a.time.localeCompare(b.time);
+  });
+  var items=sorted.map(function(s,idx){
+    var c=S.clients.find(function(x){return x.id===s.clientId;});
+    if(!c)return '';
+    var _slk=(s.sessionType&&s.sessionType.indexOf('virtual')>-1)?'VIRT':(s.location||c.location);
+    var _sc=Object.assign({},c,{location:_slk});
+    var base=s.rateOverride?s.rateOverride.base:getSessionRate(_sc,s.sessionType);
+    var gym=s.rateOverride?s.rateOverride.gym:getGymFee(_sc,s.sessionType);
+    var travel=s.travelFee||0;
+    var cancelCharge=s.noShow?(s.cancelCharge||0):0;
+    var total=s.noShow?cancelCharge:(base+gym+travel);
+    dayTotal+=total;
+    var loc=LOCATIONS[_slk];
+    var amountHtml='';
+    if(s.noShow){
+      var ccAmt=s.cancelCharge||0;
+      amountHtml='<span class="si-badge ns">No-show/Cancel</span>'+(ccAmt>0?'<div class="si-amount">'+fmtMoney(ccAmt)+'</div>':'')+'';
+    } else {
+      var breakdown=fmtMoney(base)+(s.rateOverride?'*':'');
+      if(gym>0)breakdown+=' + '+fmtMoney(gym)+' gym';
+      if(travel>0)breakdown+=' + '+fmtMoney(travel)+' travel';
+      amountHtml='<div class="si-amount">'+fmtMoney(total)+'</div><div style="font-size:10px;color:var(--text3);text-align:right">'+breakdown+'</div>';
+    }
+    return '<div class="session-item"><div class="si-info"><div class="si-name">'+c.name+'</div><div class="si-loc">'+(s.time?fmtTime(s.time)+' \u00b7 ':'')+(loc?loc.label:s.location)+' \u00b7 '+getStLabel(s.sessionType)+'</div>'+(s.notes?'<div class="si-loc" style="font-style:italic;color:var(--text3)">'+s.notes+'</div>':'')+'</div><div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="text-align:right">'+amountHtml+'</div><button class="btn btn-sm" style="font-size:10px;padding:3px 8px" onclick="openEditSession(this.dataset.key,this.dataset.cid)" data-key="'+S.selectedDate+'" data-cid="'+s.clientId+'">Edit</button></div></div>';
+  }).join('');
+  if(S.retainerAdj&&S.retainerAdj[S.selectedDate])dayTotal+=S.retainerAdj[S.selectedDate];
+  listEl.innerHTML='<div class="card"><div class="card-title">Sessions logged &nbsp;\u00b7&nbsp; <span style="color:var(--green);font-family:\'DM Mono\',monospace">'+fmtMoney(dayTotal)+'</span></div>'+items+'</div>';
+}
+
+function getStLabel(id){
+  var st=SESSION_TYPES.find(function(x){return x.id===id;});
+  return st?st.label:id;
+}
+
+function renderTravelPending(){
+  var area=document.getElementById('travel-pending-area');
+  var sessions=S.sessions[S.selectedDate]||[];
+  var pending=sessions.filter(function(s){
+    var c=S.clients.find(function(x){return x.id===s.clientId;});
+    return c&&(s.location||c.location)==='IH'&&!s.noShow&&(!s.travelFee||s.travelFee===0);
+  });
+  if(!pending.length){area.innerHTML='';return;}
+  var items=pending.map(function(s){
+    var c=S.clients.find(function(x){return x.id===s.clientId;});
+    var idx=sessions.indexOf(s);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-size:13px;font-weight:500">'+(c?c.name:'?')+'</span><div style="display:flex;align-items:center;gap:4px"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="tamt-'+idx+'" placeholder="0.00" min="0" step="0.50" style="width:80px;font-size:13px;padding:6px 8px"></div><button class="btn btn-sm btn-primary" onclick="saveInlineTravelFee(\''+S.selectedDate+'\','+idx+')">Add</button></div>';
+  }).join('');
+  area.innerHTML='<div class="card"><div class="card-title">Travel fees to add</div>'+items+'</div>';
+}
+
+function saveInlineTravelFee(key,idx){
+  var el=document.getElementById('tamt-'+idx);
+  var amt=el?parseFloat(el.value)||0:0;
+  if(S.sessions[key]&&S.sessions[key][idx])S.sessions[key][idx].travelFee=amt;
+  save();renderLog();toast('Travel fee saved');
+}
+
+function handleClientTap(key,clientId){
+  if(!S.sessions[key])S.sessions[key]=[];
+  var arr=S.sessions[key];
+  var idx=arr.findIndex(function(s){return s.clientId===clientId;});
+  var c=S.clients.find(function(x){return x.id===clientId;});
+  if(!c)return;
+  if(idx===-1){
+    openSessionModal(key,c,null,null);
+  } else if(!arr[idx].noShow){
+    arr[idx].noShow=true;arr[idx].cancelCharge=0;save();renderLog();openCancelModal(key,idx);
+  } else {
+    arr.splice(idx,1);save();toast('Removed');renderLog();
+  }
+}
+
+function openSessionModal(key,client,editIdx,existingSession){
+  var isEdit=editIdx!==null&&editIdx!==undefined;
+  var s=existingSession||{};
+  var curLoc=s.location||client.location;
+  var curSt=s.sessionType||client.defaultSessionType;
+  var curBase=s.rateOverride?s.rateOverride.base:getSessionRate(client,curSt);
+  var curGym=s.rateOverride?s.rateOverride.gym:getGymFee(Object.assign({},client,{location:curLoc}),curSt);
+  var curTravel=s.travelFee||0;
+  var curTime=s.time||'';
+
+  var locOpts='';
+  Object.keys(LOCATIONS).forEach(function(k){
+    locOpts+='<option value="'+k+'"'+(curLoc===k?' selected':'')+'>'+LOCATIONS[k].label+'</option>';
+  });
+  var stOpts='';
+  SESSION_TYPES.forEach(function(st){
+    stOpts+='<option value="'+st.id+'"'+(curSt===st.id?' selected':'')+'>'+st.label+(st.gymPays?' (gym pays)':'')+'</option>';
+  });
+
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">'+(isEdit?'Edit':'Log')+' session &mdash; '+client.name.split(' ')[0]+'</div>';
+  html+='<div class="form-row"><label class="form-label">Time</label><input type="time" id="sm-time" value="'+curTime+'" style="max-width:130px;flex:none"></div>';
+  html+='<div class="form-row"><label class="form-label">Location</label><select id="sm-loc" onchange="smUpdateRates(\''+client.id+'\')">'+locOpts+'</select></div>';
+  html+='<div class="form-row"><label class="form-label">Session type</label><select id="sm-st" onchange="smUpdateRates(\''+client.id+'\')">'+stOpts+'</select></div>';
+  html+='<div class="rates-box">';
+  html+='<div class="rates-box-title">Rates <span style="font-weight:400;text-transform:none;letter-spacing:0">(edit to override)</span></div>';
+  html+='<div class="form-row" style="margin-bottom:6px"><label class="form-label" style="font-size:12px">Your rate</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="sm-base" value="'+curBase+'" min="0" step="0.50" style="flex:1" oninput="smUpdateTotal()"></div></div>';
+  html+='<div id="sm-gym-row" class="form-row" style="margin-bottom:6px;display:'+(curGym>0?'flex':'none')+'"><label class="form-label" style="font-size:12px">Gym fee</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="sm-gym" value="'+curGym+'" min="0" step="0.50" style="flex:1" oninput="smUpdateTotal()"></div></div>';
+  html+='<div class="rates-total-row"><span style="font-size:12px;font-weight:600;color:var(--text2)">Session total</span><span id="sm-total" style="font-size:15px;font-weight:600;font-family:\'DM Mono\',monospace">'+fmtMoney(curBase+curGym)+'</span></div>';
+  html+='</div>';
+  html+='<div id="sm-travel-row" class="form-row" style="display:'+(curLoc==='IH'?'flex':'none')+'"><label class="form-label">Travel fee</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:15px;color:var(--text2)">$</span><input type="number" id="sm-travel" value="'+(curTravel||'')+'" placeholder="0.00" min="0" step="0.50" style="flex:1"></div></div>';
+  if(isEdit){
+    if(existingSession&&existingSession.noShow){
+      html+='<div class="form-row" style="margin-top:8px"><label class="form-label">Cancel fee</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="sm-cancel" value="'+(s.cancelCharge||'')+'" placeholder="0.00" min="0" step="0.50" style="flex:1"></div></div>';
+    }
+    html+='<button class="btn btn-primary btn-block" onclick="saveSessionModal(\''+key+'\',\''+client.id+'\','+editIdx+')">Save changes</button>';
+    html+='<button class="btn btn-danger btn-block" onclick="deleteSession(\''+key+'\','+editIdx+')">Delete session</button>';
+  } else {
+    html+='<button class="btn btn-primary btn-block" onclick="saveSessionModal(\''+key+'\',\''+client.id+'\',null)">Log session</button>';
+  }
+  html+='<button class="btn btn-block" onclick="closeModal()">Cancel</button>';
+  showModal(html);
+}
+
+function smUpdateRates(clientId){
+  var c=S.clients.find(function(x){return x.id===clientId;});
+  if(!c)return;
+  var locEl=document.getElementById('sm-loc');
+  var stEl=document.getElementById('sm-st');
+  if(!locEl||!stEl)return;
+  var loc=locEl.value;
+  var st=stEl.value;
+  var tempClient=Object.assign({},c,{location:loc});
+  var base=getSessionRate(tempClient,st);
+  var gym=getGymFee(tempClient,st);
+  var baseEl=document.getElementById('sm-base');
+  var gymEl=document.getElementById('sm-gym');
+  var gymRow=document.getElementById('sm-gym-row');
+  var travelRow=document.getElementById('sm-travel-row');
+  if(baseEl)baseEl.value=base;
+  if(gymEl)gymEl.value=gym;
+  if(gymRow)gymRow.style.display=gym>0?'flex':'none';
+  if(travelRow)travelRow.style.display=loc==='IH'?'flex':'none';
+  smUpdateTotal();
+}
+
+function smUpdateTotal(){
+  var base=parseFloat((document.getElementById('sm-base')||{}).value)||0;
+  var gym=parseFloat((document.getElementById('sm-gym')||{}).value)||0;
+  var el=document.getElementById('sm-total');
+  if(el)el.textContent=fmtMoney(base+gym);
+}
+
+function saveSessionModal(key,clientId,editIdx){
+  var c=S.clients.find(function(x){return x.id===clientId;});
+  if(!c)return;
+  var locEl=document.getElementById('sm-loc');
+  var stEl=document.getElementById('sm-st');
+  var timeEl=document.getElementById('sm-time');
+  var baseEl=document.getElementById('sm-base');
+  var gymEl=document.getElementById('sm-gym');
+  var travelEl=document.getElementById('sm-travel');
+  var loc=locEl?locEl.value:c.location;
+  var st=stEl?stEl.value:c.defaultSessionType;
+  var time=timeEl?timeEl.value:'';
+  var base=parseFloat((baseEl||{}).value)||0;
+  var gym=parseFloat((gymEl||{}).value)||0;
+  var travel=loc==='IH'?(parseFloat((travelEl||{}).value)||0):0;
+  var tempClient=Object.assign({},c,{location:loc});
+  var defaultBase=getSessionRate(tempClient,st);
+  var defaultGym=getGymFee(tempClient,st);
+  var rateOverride=(base!==defaultBase||gym!==defaultGym)?{base:base,gym:gym}:null;
+  if(!S.sessions[key])S.sessions[key]=[];
+  var cancelFeeEl=document.getElementById('sm-cancel');
+  var cancelCharge=cancelFeeEl?parseFloat(cancelFeeEl.value)||0:0;
+  var notesEl=document.getElementById('sm-notes');
+  var notes=notesEl?notesEl.value.trim():'';
+  var entry={clientId:clientId,sessionType:st,location:loc,travelFee:travel,noShow:false,time:time,rateOverride:rateOverride,cancelCharge:cancelCharge,notes:notes};
+  if(editIdx!==null&&editIdx!==undefined){
+    S.sessions[key][editIdx]=Object.assign(S.sessions[key][editIdx],entry);
+  } else {
+    S.sessions[key].push(entry);
+  }
+  S.sessions[key].sort(function(a,b){
+    if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;
+    return a.time.localeCompare(b.time);
+  });
+  save();closeModal();renderLog();toast(editIdx!==null&&editIdx!==undefined?'Session updated':'Session logged');
+}
+
+function openEditSession(key,clientId){
+  var arr=S.sessions[key]||[];
+  var idx=arr.findIndex(function(s){return s.clientId===clientId;});
+  if(idx===-1)return;
+  var s=arr[idx];
+  var c=S.clients.find(function(x){return x.id===s.clientId;});
+  if(!c)return;
+  openSessionModal(key,c,idx,s);
+}
+
+function deleteSession(key,idx){
+  if(!confirm('Delete this session?'))return;
+  S.sessions[key].splice(idx,1);
+  if(!S.sessions[key].length)delete S.sessions[key];
+  save();closeModal();renderLog();toast('Session deleted');
+}
+
+function renderWeek(){
+  var ws=getWeekStart(S.weekOffset);
+  var we=new Date(ws);we.setDate(we.getDate()+6);
+  var fmt=function(d){return (d.getMonth()+1)+'/'+d.getDate();};
+  document.getElementById('week-label2').textContent=fmt(ws)+' \u2013 '+fmt(we);
+  var totalS=0,totalR=0,totalNS=0;
+  var locData={};
+  var rows=[];
+  for(var i=0;i<7;i++){
+    var d=new Date(ws);d.setDate(d.getDate()+i);
+    var key=dateKey(d);
+    var arr=S.sessions[key]||[];
+    var billed=arr.filter(function(s){return !s.noShow;});
+    var cancelled=arr.filter(function(s){return s.noShow;});
+    totalNS+=cancelled.length;
+    var dayRev=0;
+    cancelled.forEach(function(s){var cc=s.cancelCharge||0;if(cc>0){dayRev+=cc;totalR+=cc;}});
+    billed.forEach(function(s){
+      var c=S.clients.find(function(x){return x.id===s.clientId;});
+      if(!c)return;
+      var lk=(s.sessionType&&s.sessionType.indexOf('virtual')>-1)?'VIRT':(s.location||c.location);
+      var _sw=Object.assign({},c,{location:lk});
+      var base=s.rateOverride?s.rateOverride.base:getSessionRate(_sw,s.sessionType);
+      var gym=s.rateOverride?s.rateOverride.gym:getGymFee(_sw,s.sessionType);
+      var total=base+gym+(s.travelFee||0);
+      dayRev+=total;totalR+=total;
+      if(!locData[lk])locData[lk]={sessions:0,revenue:0,slots:{}};
+      var slotKey=lk+'|'+(s.time||'none');
+      if(!locData[lk].slots[slotKey])locData[lk].sessions++;
+      locData[lk].slots[slotKey]=true;
+      locData[lk].revenue+=(base+gym);
+    });
+    var radj=(S.retainerAdj&&S.retainerAdj[key])||0;if(radj>0){dayRev+=radj;totalR+=radj;}
+    totalS+=billed.length;
+    if(arr.length){
+      var names=arr.slice().sort(function(a,b){
+        if(!a.time&&!b.time)return 0;if(!a.time)return 1;if(!b.time)return -1;
+        return a.time.localeCompare(b.time);
+      }).map(function(s){
+        var c=S.clients.find(function(x){return x.id===s.clientId;});
+        var ts=s.time?'<span style="color:var(--text3);font-size:10px">'+fmtTime(s.time)+' </span>':'';
+        return ts+(c?c.name.split(' ')[0]:'?')+(s.noShow?'<span style="color:var(--red);font-size:10px"> ns</span>':'');
+      }).join(', ');
+      rows.push('<div style="display:flex;gap:8px;align-items:baseline;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px"><span style="min-width:64px;color:var(--text2);font-family:\'DM Mono\',monospace;font-size:11px">'+DAYS[d.getDay()]+' '+(d.getMonth()+1)+'/'+d.getDate()+'</span><span style="flex:1;line-height:1.6">'+names+'</span><span style="color:var(--green);font-weight:600;font-family:\'DM Mono\',monospace">'+fmtMoney(dayRev)+'</span></div>');
+    }
+  }
+  document.getElementById('week-metrics').innerHTML='<div class="metric"><div class="metric-num">'+totalS+'</div><div class="metric-lbl">Sessions</div></div><div class="metric"><div class="metric-num" style="color:var(--green)">'+fmtMoney(totalR)+'</div><div class="metric-lbl">Revenue</div></div><div class="metric"><div class="metric-num" style="color:var(--text3)">'+totalNS+'</div><div class="metric-lbl">No-shows</div></div>';
+  var locRows=Object.keys(locData).map(function(loc){
+    var info=LOCATIONS[loc];
+    return '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px"><span class="loc-badge '+(info?info.badgeClass:'')+'">'+(info?info.label:loc)+'</span><span style="flex:1;color:var(--text2)">'+locData[loc].sessions+' session'+(locData[loc].sessions!==1?'s':'')+'</span><span style="font-weight:600;font-family:\'DM Mono\',monospace">'+fmtMoney(locData[loc].revenue)+'</span></div>';
+  }).join('');
+  document.getElementById('week-by-location').innerHTML='<div class="card-title">By location</div>'+(locRows||'<div class="empty-state">No sessions this week.</div>');
+  document.getElementById('week-breakdown').innerHTML='<div class="card-title">Daily breakdown</div>'+(rows.length?rows.join(''):'<div class="empty-state">No sessions logged this week.</div>');
+}
+
+function getMonthKeys(){
+  var keys={};var now=new Date();
+  for(var i=0;i<6;i++){var d=new Date(now.getFullYear(),now.getMonth()-i,1);keys[d.getFullYear()+'-'+(d.getMonth()+1)]=true;}
+  Object.keys(S.sessions).forEach(function(k){var p=k.split('-');keys[p[0]+'-'+p[1]]=true;});
+  return Object.keys(keys).sort(function(a,b){return b.localeCompare(a);});
+}
+
+function renderBilling(){
+  var sel=document.getElementById('billing-month');
+  if(!sel.options.length){
+    getMonthKeys().forEach(function(k){
+      var p=k.split('-');var o=document.createElement('option');
+      o.value=k;o.textContent=MONTHS[parseInt(p[1])-1]+' '+p[0];sel.appendChild(o);
+    });
+  }
+  var parts=sel.value.split('-').map(Number);var yr=parts[0],mo=parts[1];
+  var cSess={};
+  S.clients.forEach(function(c){cSess[c.id]={sessions:0,noShow:0,baseTotal:0,gymTotal:0,travelTotal:0};});
+  Object.keys(S.sessions).forEach(function(key){
+    var kp=key.split('-').map(Number);
+    if(kp[0]!==yr||kp[1]!==mo)return;
+    S.sessions[key].forEach(function(s){
+      var c=S.clients.find(function(x){return x.id===s.clientId;});
+      if(!c)return;
+      if(!cSess[c.id])cSess[c.id]={sessions:0,noShow:0,baseTotal:0,gymTotal:0,travelTotal:0};
+      if(s.noShow){cSess[c.id].noShow++;cSess[c.id].baseTotal+=(s.cancelCharge||0);return;}
+      cSess[c.id].sessions++;
+      var _sb=Object.assign({},c,{location:s.location||c.location});
+      cSess[c.id].baseTotal+=s.rateOverride?s.rateOverride.base:getSessionRate(_sb,s.sessionType);
+      cSess[c.id].gymTotal+=s.rateOverride?s.rateOverride.gym:getGymFee(_sb,s.sessionType);
+      cSess[c.id].travelTotal+=(s.travelFee||0);
+    });
+  });
+  var totalS=0,totalR=0,unpaid=0;
+  var retainerTotal=0;
+  Object.keys(S.sessions).forEach(function(key){
+    var kp=key.split('-').map(Number);if(kp[0]!==yr||kp[1]!==mo)return;
+    var radj=(S.retainerAdj&&S.retainerAdj[key])||0;retainerTotal+=radj;
+  });
+  S.clients.forEach(function(c){
+    var d=cSess[c.id];if(!d||d.sessions===0)return;
+    var total=d.baseTotal+d.gymTotal+d.travelTotal;
+    if(!isGymPaysClient(c))totalR+=total;
+    totalS+=d.sessions;
+  });
+  totalR+=retainerTotal;
+  S.clients.forEach(function(c){
+    var d=cSess[c.id];if(!d||d.sessions===0||isGymPaysClient(c))return;
+    var pk=yr+'-'+mo+'-'+c.id;
+    if(!c.paid||!c.paid[pk])unpaid++;
+  });
+  document.getElementById('billing-metrics').innerHTML='<div class="metric"><div class="metric-num">'+totalS+'</div><div class="metric-lbl">Sessions</div></div><div class="metric"><div class="metric-num" style="color:var(--green)">'+fmtMoney(totalR)+'</div><div class="metric-lbl">Direct rev</div></div><div class="metric"><div class="metric-num" style="color:var(--amber)">'+unpaid+'</div><div class="metric-lbl">To invoice</div></div>';
+  var invEl=document.getElementById('billing-invoices');
+  var direct=S.clients.filter(function(c){var d=cSess[c.id];return d&&d.sessions>0&&!isGymPaysClient(c);}).sort(function(a,b){return a.name.localeCompare(b.name);});
+  if(!direct.length){invEl.innerHTML='<div class="empty-state">No direct-pay sessions this month.</div>';}
+  else{
+    var rows=direct.map(function(c){
+      var d=cSess[c.id];var total=d.baseTotal+d.gymTotal+d.travelTotal;
+      var pk=yr+'-'+mo+'-'+c.id;var paid=c.paid&&c.paid[pk];
+      var breakdown=d.sessions+' session'+(d.sessions!==1?'s':'');
+      if(d.gymTotal>0)breakdown+=' \u00b7 gym '+fmtMoney(d.gymTotal);
+      if(d.travelTotal>0)breakdown+=' \u00b7 travel '+fmtMoney(d.travelTotal);
+      if(d.noShow>0)breakdown+=' \u00b7 '+d.noShow+' no-show';
+      return '<div class="billing-item"><div><div class="bi-name">'+c.name+'</div><div class="bi-detail">'+breakdown+'</div></div><div class="bi-right"><div class="bi-total">'+fmtMoney(total)+'</div><span class="bi-status '+(paid?'paid':'unpaid')+'" onclick="togglePaid(\''+c.id+'\',\''+pk+'\')">'+(paid?'Paid':'Unpaid')+'</span></div></div>';
+    }).join('');
+    invEl.innerHTML='<div class="card"><div class="card-title">Direct invoices</div>'+rows+'</div>';
+  }
+  var gymEl=document.getElementById('billing-gymclients');
+  var gym=S.clients.filter(function(c){var d=cSess[c.id];return d&&d.sessions>0&&isGymPaysClient(c);}).sort(function(a,b){return a.name.localeCompare(b.name);});
+  if(!gym.length){gymEl.innerHTML='<div class="empty-state">No gym-pay sessions this month.</div>';}
+  else{
+    var grows=gym.map(function(c){
+      var d=cSess[c.id];var total=d.baseTotal+d.gymTotal+d.travelTotal;
+      return '<div class="billing-item"><div><div class="bi-name">'+c.name+'</div><div class="bi-detail">'+d.sessions+' session'+(d.sessions!==1?'s':'')+' \u00b7 '+getLocLabel(c.location)+' pays you</div></div><div class="bi-right"><div class="bi-total">'+fmtMoney(total)+'</div><div style="font-size:10px;color:var(--text3);margin-top:4px">gym pays</div></div></div>';
+    }).join('');
+    gymEl.innerHTML='<div class="card"><div class="card-title">Gym-pay sessions</div>'+grows+'</div>';
+  }
+  var locEl=document.getElementById('billing-locations');
+  var locData={};
+  Object.keys(S.sessions).forEach(function(key){
+    var kp=key.split('-').map(Number);if(kp[0]!==yr||kp[1]!==mo)return;
+    S.sessions[key].forEach(function(s){
+      if(s.noShow)return;
+      var c=S.clients.find(function(x){return x.id===s.clientId;});if(!c)return;
+      var lk=(s.sessionType&&s.sessionType.indexOf('virtual')>-1)?'VIRT':(s.location||c.location);
+      if(!locData[lk])locData[lk]={sessions:0,revenue:0,slots:{}};
+      var slotKey2=lk+'|'+(s.time||'none')+key;
+      if(!locData[lk].slots[slotKey2])locData[lk].sessions++;
+      locData[lk].slots[slotKey2]=true;
+      if(!isGymPays(s.sessionType)){
+        var _sl=Object.assign({},c,{location:lk});
+        var base=s.rateOverride?s.rateOverride.base:getSessionRate(_sl,s.sessionType);
+        var gym2=s.rateOverride?s.rateOverride.gym:getGymFee(_sl,s.sessionType);
+        locData[lk].revenue+=base+gym2;
+      }
+    });
+  });
+  var lrows=Object.keys(locData).sort(function(a,b){return locData[b].revenue-locData[a].revenue;}).map(function(loc){
+    var info=LOCATIONS[loc];
+    return '<div class="billing-item"><div><div class="bi-name">'+(info?info.label:loc)+'</div><div class="bi-detail">'+locData[loc].sessions+' session'+(locData[loc].sessions!==1?'s':'')+'</div></div><div class="bi-right"><div class="bi-total">'+fmtMoney(locData[loc].revenue)+'</div></div></div>';
+  }).join('');
+  locEl.innerHTML=lrows?'<div class="card"><div class="card-title">Revenue by location</div>'+lrows+'</div>':'<div class="empty-state">No sessions this month.</div>';
+  showBillingTab(S.billingTab||'invoices');
+}
+
+function isGymPaysClient(c){return isGymPays(c.defaultSessionType);}
+
+function togglePaid(clientId,pk){
+  var c=S.clients.find(function(x){return x.id===clientId;});if(!c)return;
+  if(!c.paid)c.paid={};c.paid[pk]=!c.paid[pk];
+  save();renderBilling();toast(c.paid[pk]?'Marked paid':'Marked unpaid');
+}
+
+function renderClients(){
+  document.getElementById('client-count').textContent=S.clients.length;
+  var list=document.getElementById('client-list');
+  if(!S.clients.length){list.innerHTML='<div class="empty-state">No clients yet. Tap Add Client to start.</div>';return;}
+  list.innerHTML=sortedClients().map(function(c){
+    var loc=LOCATIONS[c.location];var st=SESSION_TYPES.find(function(x){return x.id===c.defaultSessionType;});
+    var rate=getSessionRate(c,c.defaultSessionType);var gym=getGymFee(c,c.defaultSessionType);
+    return '<div class="roster-item"><div class="avatar">'+initials(c.name)+'</div><div style="flex:1;min-width:0"><div class="ri-name">'+c.name+(c.legacy?' <span style="font-size:10px;color:var(--amber);background:var(--amber-bg);padding:1px 6px;border-radius:10px">legacy</span>':'')+'</div><div class="ri-detail">'+(loc?loc.label:c.location)+' \u00b7 '+(st?st.label:'?')+'<br>'+fmtMoney(rate+gym)+'/session'+(gym>0?' (incl. gym fee)':'')+'</div></div><button class="btn btn-sm" onclick="openEditClient(\''+c.id+'\')" style="margin-right:6px">Edit</button><button class="btn btn-sm btn-danger" onclick="removeClient(\''+c.id+'\')">&#x2715;</button></div>';
+  }).join('');
+}
+
+function openAddClient(){showModal(clientFormHTML(null));}
+function openEditClient(id){var c=S.clients.find(function(x){return x.id===id;});if(c)showModal(clientFormHTML(c));}
+
+function clientFormHTML(c){
+  var isEdit=!!c;
+  var locOpts='';Object.keys(LOCATIONS).forEach(function(k){locOpts+='<option value="'+k+'"'+(c&&c.location===k?' selected':'')+'>'+LOCATIONS[k].label+'</option>';});
+  var stOpts='';SESSION_TYPES.forEach(function(st){stOpts+='<option value="'+st.id+'"'+(c&&c.defaultSessionType===st.id?' selected':'')+'>'+st.label+(st.gymPays?' (gym pays)':'')+'</option>';});
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">'+(isEdit?'Edit Client':'Add Client')+'</div>';
+  html+='<input type="hidden" id="cf-id" value="'+(c?c.id:'')+'">';
+  html+='<div class="form-row"><label class="form-label">Name</label><input type="text" id="cf-name" value="'+(c?c.name:'')+'" placeholder="Full name" autocomplete="off"></div>';
+  html+='<div class="form-row"><label class="form-label">Location</label><select id="cf-loc">'+locOpts+'</select></div>';
+  html+='<div class="form-row"><label class="form-label">Session type</label><select id="cf-st">'+stOpts+'</select></div>';
+  html+='<div class="form-row" style="align-items:center;gap:12px"><label class="form-label">Legacy rate</label><label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="cf-legacy"'+(c&&c.legacy?' checked':'')+' style="width:18px;height:18px;flex:none"><span style="color:var(--text2);font-size:13px">Yes \u2014 apply legacy pricing</span></label></div>';
+  html+='<div class="form-row" style="align-items:center;gap:12px"><label class="form-label">Retainer</label><label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="cf-retainer"'+(c&&c.retainer?' checked':'')+' style="width:18px;height:18px;flex:none" onchange="toggleRetainerFields()"><span style="color:var(--text2);font-size:13px">Yes \u2014 retainer client</span></label></div>';
+  html+='<div id="cf-retainer-fields" style="display:'+(c&&c.retainer?'block':'none')+'">'+'<div class="form-row"><label class="form-label">Min/block</label><div style="display:flex;align-items:center;gap:4px;flex:1"><span style="font-size:13px;color:var(--text2)">$</span><input type="number" id="cf-retainer-amt" value="'+(c&&c.retainerAmt?c.retainerAmt:'150')+'" min="0" step="0.50" style="flex:1"></div></div>'+'<div class="form-row"><label class="form-label">Partner</label><select id="cf-retainer-partner"><option value="">None</option>'+ S.clients.filter(function(x){return !c||x.id!==c.id;}).map(function(x){return '<option value="'+x.id+'"'+(c&&c.retainerPartnerId===x.id?' selected':'')+'>'+x.name+'</option>';}).join('') +'</select></div>'+'</div>';
+  var mileLocOpts='<option value="">None (gym/virtual client)</option>'+(S.mileLocations||[]).map(function(l){return '<option value="'+l.key+'"'+(c&&c.mileageKey===l.key?' selected':'')+'>'+l.label+'</option>';}).join('');
+  html+='<div class="form-row"><label class="form-label">Mile location</label><select id="cf-milekey">'+mileLocOpts+'</select></div>';
+  html+='<button class="btn btn-primary btn-block" style="margin-top:4px" onclick="saveClient()">'+(isEdit?'Save changes':'Add client')+'</button>';
+  return html;
+}
+
+function saveClient(){
+  var id=document.getElementById('cf-id').value;
+  var name=document.getElementById('cf-name').value.trim();
+  var location=document.getElementById('cf-loc').value;
+  var defaultSessionType=document.getElementById('cf-st').value;
+  var legacy=document.getElementById('cf-legacy').checked;
+  var retainer=document.getElementById('cf-retainer')?document.getElementById('cf-retainer').checked:false;
+  var retainerAmt=retainer?(parseFloat((document.getElementById('cf-retainer-amt')||{}).value)||150):0;
+  var retainerPartnerEl=document.getElementById('cf-retainer-partner');
+  var retainerPartnerId=retainerPartnerEl?retainerPartnerEl.value:'';
+  var mileageKey=(document.getElementById('cf-milekey')||{}).value||'';
+  if(!name){toast('Enter a name');return;}
+  if(id){var c=S.clients.find(function(x){return x.id===id;});if(c){c.name=name;c.location=location;c.defaultSessionType=defaultSessionType;c.legacy=legacy;c.retainer=retainer;c.retainerAmt=retainerAmt;c.retainerPartnerId=retainerPartnerId;c.mileageKey=mileageKey;}}
+  else{S.clients.push({id:'c'+Date.now(),name:name,location:location,defaultSessionType:defaultSessionType,legacy:legacy,retainer:retainer,retainerAmt:retainerAmt,retainerPartnerId:retainerPartnerId,mileageKey:mileageKey,paid:{}});}
+  save();closeModal();renderClients();toast(id?'Client updated':name+' added');
+}
+
+function removeClient(id){
+  var c=S.clients.find(function(x){return x.id===id;});if(!c)return;
+  if(!confirm('Remove '+c.name+'?'))return;
+  S.clients=S.clients.filter(function(x){return x.id!==id;});
+  save();renderClients();toast('Client removed');
+}
+
+
+
+// ── Location & Distance Management ───────────────────────────────────────────
+function openMileLocationsModal(){
+  renderMileLocationsModal();
+}
+
+function renderMileLocationsModal(){
+  seedMileageData();
+  var locs=S.mileLocations||[];
+  var locRows='';
+  locs.forEach(function(l,i){
+    locRows+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)">';
+    locRows+='<div style="flex:1"><div style="font-size:13px;font-weight:600">'+l.label+'</div>';
+    locRows+='<div style="font-size:10px;color:var(--text3)">Key: '+l.key+'</div></div>';
+    locRows+='<button class="btn btn-sm" onclick="openEditMileLocation('+i+')">Edit</button>';
+    locRows+='<button class="btn btn-sm btn-danger" onclick="deleteMileLocation('+i+')">&#x2715;</button>';
+    locRows+='</div>';
+  });
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">Locations &amp; Distances</div>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:10px">';
+  html+='<button class="btn btn-primary" style="flex:1" data-tab="locs" onclick="showMileTab(this.dataset.tab)">Locations</button>';
+  html+='<button class="btn" style="flex:1" data-tab="dists" onclick="showMileTab(this.dataset.tab)">Distances</button>';
+  html+='</div>';
+  html+='<div id="mile-tab-locs">';
+  html+='<button class="btn btn-primary btn-block" style="margin-bottom:10px" onclick="openAddMileLocation()">+ Add location</button>';
+  html+=locRows;
+  html+='</div>';
+  html+='<div id="mile-tab-dists" style="display:none">';
+  html+='<div id="mile-dist-rows"><p style="font-size:12px;color:var(--text3);text-align:center;padding:12px 0">Tap Distances to load...</p></div>';
+  html+='</div>';
+  showModal(html);
+}
+
+function buildDistRows(){
+  seedMileageData();
+  var locs=S.mileLocations||[];
+  var distRows='';
+  distRows+='<p style="font-size:11px;color:var(--text3);margin-bottom:10px">Tap any distance to edit. Same distance used both ways.</p>';
+  for(var i=0;i<locs.length;i++){
+    for(var j=i+1;j<locs.length;j++){
+      var ka=locs[i].key;var kb=locs[j].key;
+      var d=(S.mileDistances||{})[ka+'|'+kb];
+      var distDisplay=(d!==undefined&&d!==null)?d+' mi':'?';
+      var color=(d===undefined||d===null)?'var(--red)':'var(--text2)';
+      distRows+='<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)">';
+      distRows+='<span style="flex:1;font-size:12px">'+locs[i].label+' ↔ '+locs[j].label+'</span>';
+      distRows+='<button class="btn btn-sm" style="color:'+color+';min-width:52px" data-ka="'+ka+'" data-kb="'+kb+'" onclick="editMileDist(this.dataset.ka,this.dataset.kb)">'+distDisplay+'</button>';
+      distRows+='</div>';
+    }
+  }
+  var el=document.getElementById('mile-dist-rows');
+  if(el)el.innerHTML=distRows;
+}
+
+function showMileTab(tab){
+  var locsEl=document.getElementById('mile-tab-locs');
+  var distsEl=document.getElementById('mile-tab-dists');
+  if(locsEl)locsEl.style.display=tab==='locs'?'block':'none';
+  if(distsEl)distsEl.style.display=tab==='dists'?'block':'none';
+  if(tab==='dists')setTimeout(buildDistRows,50);
+}
+
+function openAddMileLocation(){
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">Add Location</div>';
+  html+='<div class="form-row"><label class="form-label">Name</label><input type="text" id="ml-label" placeholder="e.g. Steve\'s home" autocomplete="off" style="flex:1"></div>';
+  html+='<div class="form-row"><label class="form-label">Key</label><input type="text" id="ml-key" placeholder="e.g. Steve" autocomplete="off" style="flex:1"><span style="font-size:10px;color:var(--text3);margin-left:4px">short, no spaces</span></div>';
+  html+='<p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5">After adding, go to Distances tab to enter distances from this location to all others.</p>';
+  html+='<button class="btn btn-primary btn-block" onclick="saveMileLocation(-1)">Add location</button>';
+  html+='<button class="btn btn-block" onclick="renderMileLocationsModal();setTimeout(function(){showMileTab(\'dists\');},100)">Back</button>';
+  showModal(html);
+}
+
+function openEditMileLocation(idx){
+  var l=S.mileLocations[idx];
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">Edit Location</div>';
+  html+='<div class="form-row"><label class="form-label">Name</label><input type="text" id="ml-label" value="'+l.label+'" autocomplete="off" style="flex:1"></div>';
+  html+='<div class="form-row"><label class="form-label">Key</label><input type="text" id="ml-key" value="'+l.key+'" autocomplete="off" style="flex:1"></div>';
+  html+='<button class="btn btn-primary btn-block" onclick="saveMileLocation('+idx+')">Save changes</button>';
+  html+='<button class="btn btn-block" onclick="renderMileLocationsModal();setTimeout(function(){showMileTab(\'dists\');},100)">Back</button>';
+  showModal(html);
+}
+
+function saveMileLocation(idx){
+  var label=(document.getElementById('ml-label').value||'').trim();
+  var key=(document.getElementById('ml-key').value||'').trim().replace(/\s+/g,'');
+  if(!label||!key){toast('Enter name and key');return;}
+  seedMileageData();
+  if(idx===-1){
+    // Check for duplicate key
+    if(S.mileLocations.find(function(l){return l.key===key;})){toast('Key already exists');return;}
+    S.mileLocations.push({key:key,label:label});
+    // No distances yet for new location - they show as ? until filled
+  } else {
+    var oldKey=S.mileLocations[idx].key;
+    S.mileLocations[idx]={key:key,label:label};
+    // Update distances if key changed
+    if(oldKey!==key){
+      var newDists={};
+      Object.keys(S.mileDistances||{}).forEach(function(dk){
+        var newDk=dk.replace(new RegExp('(^|\\|)'+oldKey+'(\\||$)'),function(m,p1,p2){return p1+key+p2;});
+        newDists[newDk]=S.mileDistances[dk];
+      });
+      S.mileDistances=newDists;
+    }
+  }
+  save();renderMileLocationsModal();toast(idx===-1?'Location added':'Location updated');
+}
+
+function deleteMileLocation(idx){
+  var l=S.mileLocations[idx];
+  if(!confirm('Remove '+l.label+'? This will also delete all distances involving this location.'))return;
+  // Remove distances for this location
+  var key=l.key;
+  Object.keys(S.mileDistances||{}).forEach(function(dk){
+    if(dk.indexOf(key)>-1)delete S.mileDistances[dk];
+  });
+  S.mileLocations.splice(idx,1);
+  save();renderMileLocationsModal();toast('Location removed');
+}
+
+function editMileDist(ka,kb){
+  seedMileageData();
+  var current=(S.mileDistances||{})[ka+'|'+kb];
+  var la=(S.mileLocations||[]).find(function(l){return l.key===ka;});
+  var lb=(S.mileLocations||[]).find(function(l){return l.key===kb;});
+  var html='<span class="modal-close" onclick="closeModal()">&#x2715;</span>';
+  html+='<div class="modal-title">Edit Distance</div>';
+  html+='<div style="font-size:13px;font-weight:500;margin-bottom:12px;text-align:center">'+(la?la.label:ka)+' ↔ '+(lb?lb.label:kb)+'</div>';
+  html+='<div class="form-row"><label class="form-label">Miles</label><input type="number" id="md-dist" value="'+(current!==undefined?current:'')+'" placeholder="0.0" min="0" step="0.1" style="flex:1"></div>';
+  html+='<button class="btn btn-primary btn-block" data-ka="'+ka+'" data-kb="'+kb+'" onclick="saveMileDist(this.dataset.ka,this.dataset.kb)">Save</button>';
+  html+='<button class="btn btn-block" onclick="renderMileLocationsModal();setTimeout(function(){showMileTab(\'dists\');},100)">Back</button>';
+  showModal(html);
+}
+
+function saveMileDist(ka,kb){
+  var el=document.getElementById('md-dist');
+  var dist=el?parseFloat(el.value):NaN;
+  if(isNaN(dist)){toast('Enter a valid distance');return;}
+  if(!S.mileDistances)S.mileDistances={};
+  S.mileDistances[ka+'|'+kb]=dist;
+  S.mileDistances[kb+'|'+ka]=dist;
+  save();renderMileLocationsModal();setTimeout(function(){showMileTab('dists');},100);toast('Distance saved');
+}
+
+function renderMileageReport(){
+  var summary=getMileageSummary();
+  var el=document.getElementById('mileage-report-content');
+  if(!el)return;
+  var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var rows=Object.keys(summary.byMonth).sort(function(a,b){return b.localeCompare(a);}).map(function(mo){
+    var parts=mo.split('-');
+    var label=MONTHS[parseInt(parts[1])-1]+' '+parts[0];
+    return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>'+label+'</span><span style="font-family:\'DM Mono\',monospace;font-weight:600">'+summary.byMonth[mo].toFixed(1)+' mi</span></div>';
+  }).join('');
+  el.innerHTML='<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:14px;font-weight:600;border-bottom:2px solid var(--border)"><span>Total all time</span><span style="font-family:\'DM Mono\',monospace;color:var(--green)">'+summary.total.toFixed(1)+' mi</span></div>'+(rows||'<div class="empty-state">No mileage logged yet.</div>');
+}
+
+function renderSettings(){
+  if(!S.nudge)S.nudge={time:'20:00',days:[1,2,3,4,5]};
+  document.getElementById('nudge-time').value=S.nudge.time;
+  var container=document.getElementById('nudge-days');
+  container.innerHTML=DAYS.map(function(d,i){
+    return '<button class="day-toggle '+(S.nudge.days.indexOf(i)>-1?'on':'')+'" onclick="toggleNudgeDay('+i+')">'+d.slice(0,2)+'</button>';
+  }).join('');
+  updateNudgeStatus();
+}
+
+function toggleNudgeDay(i){
+  var idx=S.nudge.days.indexOf(i);
+  if(idx===-1)S.nudge.days.push(i);else S.nudge.days.splice(idx,1);
+  renderSettings();
+}
+
+function saveNudge(){S.nudge.time=document.getElementById('nudge-time').value;save();scheduleNudge();updateNudgeStatus();toast('Reminder saved');}
+
+function testNudge(){
+  if(!('Notification' in window)){toast('Notifications not supported');return;}
+  Notification.requestPermission().then(function(p){
+    if(p==='granted'){new Notification('PT Tracker',{body:'Did you log all your sessions today?'});toast('Test sent');}
+    else toast('Please allow notifications');
+    updateNudgeStatus();
+  });
+}
+
+function updateNudgeStatus(){
+  var el=document.getElementById('nudge-status');if(!el)return;
+  if(!('Notification' in window)){el.textContent='Notifications not supported.';return;}
+  var p=Notification.permission;
+  if(p==='granted')el.textContent='Reminders on \u00b7 fires at '+S.nudge.time;
+  else if(p==='denied')el.textContent='Notifications blocked \u2014 enable in Settings > Safari > Notifications.';
+  else el.textContent='Tap Save or Test to turn on notifications.';
+}
+
+function scheduleNudge(){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(window._nudgeTimer)clearTimeout(window._nudgeTimer);
+  var parts=S.nudge.time.split(':').map(Number);
+  var now=new Date();var fire=new Date();fire.setHours(parts[0],parts[1],0,0);
+  if(fire<=now)fire.setDate(fire.getDate()+1);
+  window._nudgeTimer=setTimeout(function(){
+    if(S.nudge.days.indexOf(new Date().getDay())>-1)new Notification('PT Tracker',{body:'Did you log all your sessions today?'});
+    scheduleNudge();
+  },fire-now);
+}
+
+function exportData(){
+  var backup={version:1,exportedAt:new Date().toISOString(),clients:S.clients,sessions:S.sessions,retainerAdj:S.retainerAdj||{},retainerDays:S.retainerDays||{},mileageLog:S.mileageLog||{},mileLocations:S.mileLocations||[],mileDistances:S.mileDistances||{}};
+  var blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  var url=URL.createObjectURL(blob);var a=document.createElement('a');
+  a.href=url;a.download='pt-tracker-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);toast('Backup exported');
+}
+
+function importData(event){
+  var file=event.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var backup=JSON.parse(e.target.result);
+      if(!backup.clients){document.getElementById('import-status').textContent='Invalid backup file.';return;}
+      var added=0;
+      backup.clients.forEach(function(bc){if(!S.clients.find(function(x){return x.id===bc.id;})){S.clients.push(bc);added++;}});
+      if(backup.sessions){
+        Object.keys(backup.sessions).forEach(function(key){
+          if(!S.sessions[key])S.sessions[key]=[];
+          backup.sessions[key].forEach(function(bs){
+            if(!S.sessions[key].find(function(x){return x.clientId===bs.clientId&&x.time===bs.time;}))S.sessions[key].push(bs);
+          });
+        });
+      }
+      if(backup.retainerAdj)S.retainerAdj=Object.assign(S.retainerAdj||{},backup.retainerAdj);
+      if(backup.retainerDays)S.retainerDays=Object.assign(S.retainerDays||{},backup.retainerDays);
+      if(backup.mileageLog)S.mileageLog=Object.assign(S.mileageLog||{},backup.mileageLog);
+      if(backup.mileLocations&&backup.mileLocations.length)S.mileLocations=backup.mileLocations;
+      if(backup.mileDistances)S.mileDistances=Object.assign({},backup.mileDistances);
+      save();document.getElementById('import-status').textContent=added+' client'+(added!==1?'s':'')+' imported.';
+      renderClients();toast('Backup imported');
+    }catch(err){document.getElementById('import-status').textContent='Could not read file.';}
+  };
+  reader.readAsText(file);event.target.value='';
+}
+
+function clearAllData(){
+  if(!confirm('This will permanently delete all clients, sessions, and settings. Are you sure?'))return;
+  localStorage.removeItem('pt_v4');location.reload();
+}
+
+function showModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-overlay').style.display='flex';}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+function closeModalOverlay(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+if(S.nudge&&('Notification' in window)&&Notification.permission==='granted')scheduleNudge();
+renderLog();
+</script>
+</body>
+</html>
